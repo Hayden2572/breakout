@@ -1,6 +1,7 @@
 # audio/sound_manager.py
 
 import pygame
+import os
 
 class SoundManager:
     """Менеджер звуков и музыки"""
@@ -24,3 +25,7 @@ class SoundManager:
         
         self.music_volume = 0.5
         self.sound_volume = 0.7
+
+    def _load_sounds(self):
+        """Загрузить все звуки из папки"""
+        pass
