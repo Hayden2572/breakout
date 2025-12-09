@@ -48,3 +48,37 @@ class SoundManager:
                         self.sounds[sound_key].set_volume(self.sound_volume)
                 except pygame.error as e:
                     print(f"Не удалось загрузить звук {filename}: {e}")
+                    
+    def play_paddle_hit(self):
+        self._play_sound('paddle_hit')
+    
+    def play_brick_hit(self):
+        self._play_sound('brick_hit')
+    
+    def play_wall_hit(self):
+        self._play_sound('wall_hit')
+    
+    def play_ball_lost(self):
+        self._play_sound('ball_lost')
+    
+    def play_game_over(self):
+        self._play_sound('game_over')
+    
+    def play_level_complete(self):
+        self._play_sound('level_complete')
+    
+    def play_victory(self):
+        self._play_sound('victory')
+    
+    def play_ball_launch(self):
+        self._play_sound('ball_launch')
+    
+    def play_level_start(self):
+        self._play_sound('level_start')
+    
+    def _play_sound(self, sound_key):
+        if sound_key in self.sounds and self.sounds[sound_key] is not None:
+            try:
+                self.sounds[sound_key].play()
+            except pygame.error as e:
+                print(f"Ошибка при проигрывании звука {sound_key}: {e}")
