@@ -25,7 +25,7 @@ class SoundManager:
 
         self._load_sounds()
 
-        def _load_sounds(self):
+    def _load_sounds(self):
             
             sound_files = {
                 'paddle_hit': 'paddle_hit.wav',
