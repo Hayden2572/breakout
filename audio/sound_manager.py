@@ -48,7 +48,7 @@ class SoundManager:
                         self.sounds[sound_key].set_volume(self.sound_volume)
                 except pygame.error as e:
                     print(f"Не удалось загрузить звук {filename}: {e}")
-                    
+
     def play_paddle_hit(self):
         self._play_sound('paddle_hit')
     
@@ -82,3 +82,15 @@ class SoundManager:
                 self.sounds[sound_key].play()
             except pygame.error as e:
                 print(f"Ошибка при проигрывании звука {sound_key}: {e}")
+
+    def set_sound_volume(self, volume):
+        self.sound_volume = max(0.0, min(1.0, volume))
+        for sound in self.sounds.values():
+            if sound is not None:
+                sound.set_volume(self.sound_volume)
+    
+    def mute_all(self):
+        self.set_sound_volume(0.0)
+    
+    def unmute_all(self):
+        self.set_sound_volume(0.7)
