@@ -1,16 +1,13 @@
-# audio/sound_manager.py
 
 import pygame
 import os
 
 class SoundManager:
-    """Менеджер звуков и музыки"""
     
     def __init__(self):
         pygame.mixer.init()
         self.sounds_dir = "audio/sounds/"
         
-        # Словарь загруженных звуков
         self.sounds = {
             'paddle_hit': None,
             'brick_hit': None,
@@ -27,9 +24,9 @@ class SoundManager:
         self.sound_volume = 0.7
 
         self._load_sounds()
-        
+
         def _load_sounds(self):
-            """Загрузить все звуки из папки"""
+            
             sound_files = {
                 'paddle_hit': 'paddle_hit.wav',
                 'brick_hit': 'brick_hit.wav',
