@@ -26,6 +26,8 @@ class SoundManager:
         self.music_volume = 0.5
         self.sound_volume = 0.7
 
+        self._load_sounds()
+        
         def _load_sounds(self):
             """Загрузить все звуки из папки"""
             sound_files = {
