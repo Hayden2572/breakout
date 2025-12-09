@@ -1,7 +1,3 @@
-# graphics/ui.py
-# РАЗРАБОТЧИК #3: Графика и интерфейс
-# Ответственность: UI элементы (меню, текст, экраны)
-
 import pygame
 from config import *
 
