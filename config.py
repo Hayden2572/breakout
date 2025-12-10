@@ -43,3 +43,33 @@ NUM_LIVES = 3
 FONT_SIZE_LARGE = 48
 FONT_SIZE_MEDIUM = 32
 FONT_SIZE_SMALL = 24
+
+STATS_FILE = "game_stats.json"
+STATS_DIR = "stats"
+DIFFICULTY_MULTIPLIERS = {...}
+DIFFICULTY_LIVES = {...}
+
+# Статистика
+STATS_FILE = "game_stats.json"
+STATS_DIR = "stats"
+
+# Максимальный уровень
+MAX_LEVEL = 5
+
+# Параметры статистики
+STATS_FILE = "game_stats.json"
+STATS_DIR = "stats"
+
+# Множители сложности (скорость)
+DIFFICULTY_MULTIPLIERS = {
+    "easy": 0.8,
+    "medium": 1.0,
+    "hard": 1.3,
+}
+
+# Количество жизней по сложности
+DIFFICULTY_LIVES = {
+    "easy": 5,
+    "medium": 3,
+    "hard": 1,
+}
