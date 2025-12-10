@@ -1,8 +1,8 @@
 """
 Обновленный модуль главной игры Breakout.
 
-Содержит главный класс Game с поддержкой аргументов командной строки
-и интеграцией с менеджером статистики.
+Содержит главный класс Game с поддержкой аргументов командной строки,
+интеграцией с менеджером статистики и звуковыми эффектами.
 """
 
 import pygame
@@ -11,7 +11,7 @@ import time
 from typing import Optional
 from config import *
 from core.stats_manager import StatsManager
-from audio.sound_manager import SoundManager
+from audio.sound_manager import SoundManager  # ← ДОБАВЛЕНО
 
 
 class Paddle:
@@ -29,8 +29,6 @@ class Paddle:
         self.width = PADDLE_WIDTH
         self.height = PADDLE_HEIGHT
         self.speed = int(PADDLE_SPEED * speed_multiplier)
-
-        self.sound_manager = SoundManager()  # ← ДОБАВИТЬ
 
     def move_left(self) -> None:
         """Переместить платформу влево."""
@@ -124,7 +122,7 @@ class BrickGroup:
 class Ball:
     """Класс шара."""
     
-    def __init__(self, x: float, y: float, speed_multiplier: float = 1.0):
+    def __init__(self, x: float, y: float, speed_multiplier: float = 1.0, sound_manager=None):
         """
         Инициализация шара.
         
@@ -132,6 +130,7 @@ class Ball:
             x: Начальная позиция X.
             y: Начальная позиция Y.
             speed_multiplier: Множитель скорости шара.
+            sound_manager: Менеджер звуков.
         """
         self.x = x
         self.y = y
@@ -141,6 +140,7 @@ class Ball:
         self.speed = BALL_SPEED * speed_multiplier
         self.max_speed = BALL_MAX_SPEED * speed_multiplier
         self.is_active = False
+        self.sound_manager = sound_manager  # ← ДОБАВЛЕНО
 
     def launch(self) -> None:
         """Запустить шар."""
@@ -150,6 +150,10 @@ class Ball:
         self.vx = self.speed * math.cos(rad)
         self.vy = self.speed * math.sin(rad)
         self.is_active = True
+        
+        # Звук запуска
+        if self.sound_manager:
+            self.sound_manager.play_ball_launch()  # ← ДОБАВЛЕНО
 
     def update(self) -> None:
         """Обновить позицию шара."""
@@ -160,10 +164,14 @@ class Ball:
         if self.x - self.radius < 0 or self.x + self.radius > WINDOW_WIDTH:
             self.vx = -self.vx
             self.x = max(self.radius, min(WINDOW_WIDTH - self.radius, self.x))
+            if self.sound_manager:
+                self.sound_manager.play_wall_hit()  # ← ДОБАВЛЕНО
 
         if self.y - self.radius < 0:
             self.vy = -self.vy
             self.y = max(self.radius, self.y)
+            if self.sound_manager:
+                self.sound_manager.play_wall_hit()  # ← ДОБАВЛЕНО
 
     def is_out_of_bounds(self) -> bool:
         """Проверить, вышел ли шар за нижнюю границу."""
@@ -330,10 +338,14 @@ class Game:
         # Компоненты игры
         self.level = Level(1, difficulty)
         self.paddle = Paddle(self.level.speed_multiplier)
-        self.ball = Ball(WINDOW_WIDTH // 2, PADDLE_Y - 10, self.level.speed_multiplier)
         
-        # Менеджер статистики
+        # Менеджеры
         self.stats_manager = StatsManager()
+        self.sound_manager = SoundManager()  # ← ДОБАВЛЕНО
+        
+        # Шар с звуком
+        self.ball = Ball(WINDOW_WIDTH // 2, PADDLE_Y - 10, 
+                        self.level.speed_multiplier, self.sound_manager)  # ← ДОБАВЛЕНО
         
         # Состояние игры
         self.state = GameState.MENU
@@ -351,6 +363,10 @@ class Game:
         self.level.generate()
         self.paddle.reset()
         self.ball.reset(self.paddle.x, self.paddle.width)
+        
+        # Звук начала уровня
+        if self.state == GameState.PLAYING:
+            self.sound_manager.play_level_start()  # ← ДОБАВЛЕНО
 
     def handle_events(self) -> None:
         """Обработать события."""
@@ -363,6 +379,7 @@ class Game:
                     if self.state == GameState.MENU:
                         self.state = GameState.PLAYING
                         self.start_time = time.time()
+                        self.sound_manager.play_level_start()  # ← ДОБАВЛЕНО
                         
                     elif self.state == GameState.PLAYING and not self.ball.is_active:
                         self.ball.launch()
@@ -370,11 +387,12 @@ class Game:
                     elif self.state == GameState.LEVEL_COMPLETE:
                         if self.level.level_number >= self.max_levels:
                             self.state = GameState.WIN
+                            self.sound_manager.play_victory()  # ← ДОБАВЛЕНО
                         else:
                             self.level = self.level.next_level()
                             self.paddle = Paddle(self.level.speed_multiplier)
                             self.ball = Ball(WINDOW_WIDTH // 2, PADDLE_Y - 10, 
-                                           self.level.speed_multiplier)
+                                           self.level.speed_multiplier, self.sound_manager)
                             self._init_level()
                             self.state = GameState.PLAYING
                             
@@ -408,7 +426,7 @@ class Game:
         
         # Столкновение с платформой
         if self.ball.check_paddle_collision(self.paddle.get_rect()):
-            pass
+            self.sound_manager.play_paddle_hit()  # ← ДОБАВЛЕНО
         
         # Столкновения с кирпичами
         for brick in self.level.bricks.get_active_bricks():
@@ -417,19 +435,23 @@ class Game:
                 brick.destroy()
                 self.level.on_brick_destroyed()
                 self.ball.increase_speed(1.01)
+                self.sound_manager.play_brick_hit()  # ← ДОБАВЛЕНО
         
         self.level.bricks.remove_destroyed()
         
         # Потеря шара
         if self.ball.is_out_of_bounds():
+            self.sound_manager.play_ball_lost()  # ← ДОБАВЛЕНО
             if not self.level.on_ball_lost():
                 self.state = GameState.GAME_OVER
+                self.sound_manager.play_game_over()  # ← ДОБАВЛЕНО
             else:
                 self.ball.reset(self.paddle.x, self.paddle.width)
         
         # Завершение уровня
         if self.level.is_complete():
             self.state = GameState.LEVEL_COMPLETE
+            self.sound_manager.play_level_complete()  # ← ДОБАВЛЕНО
 
     def render(self) -> None:
         """Отрисовать экран."""
@@ -641,7 +663,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         '--show-top',
         type=int,
-        default=10,
+        default=None,
         metavar='N',
         help='Показать топ N рекордов и выйти'
     )
@@ -709,16 +731,17 @@ def display_statistics(args) -> None:
         return
     
     # Показать топ рекордов
-    top_scores = stats_manager.get_high_scores(args.show_top)
-    if top_scores:
-        print(f"\n{'='*60}")
-        print(f"ТОП {args.show_top} РЕКОРДОВ")
-        print(f"{'='*60}")
-        for i, game in enumerate(top_scores, 1):
-            print(f"{i:2}. {game['player_name']:20} {game['score']:6} "
-                  f"уровень {game['level_reached']} ({game['difficulty']})")
-    else:
-        print("Нет сохраненной статистики")
+    if args.show_top:
+        top_scores = stats_manager.get_high_scores(args.show_top)
+        if top_scores:
+            print(f"\n{'='*60}")
+            print(f"ТОП {args.show_top} РЕКОРДОВ")
+            print(f"{'='*60}")
+            for i, game in enumerate(top_scores, 1):
+                print(f"{i:2}. {game['player_name']:20} {game['score']:6} "
+                      f"уровень {game['level_reached']} ({game['difficulty']})")
+        else:
+            print("Нет сохраненной статистики")
 
 
 def main():
@@ -730,7 +753,8 @@ def main():
     stats_mode = (
         args.show_stats or 
         args.show_player_stats is not None or 
-        args.clear_stats
+        args.clear_stats or
+        args.show_top is not None
     )
     
     if stats_mode:
